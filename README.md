@@ -32,7 +32,6 @@ To get started with this project, follow these steps:
 ### Prerequisites
 
 - Install python
-- Install pip
 - Install dependencies
 
 ### Installation
