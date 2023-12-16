@@ -43,7 +43,7 @@ def is_event(pair):
 
 
 def make_jump_text(ii, jump_record):
-    keus = ('file:', 'bin:', 'mag:')
+    keus = ('Jump:', 'Bin:', 'Mag:')
     line = (ii, jump_record['bin'], jump_record['mag'])
     line = zip(keus, line)
     line = its.chain.from_iterable(line)
@@ -112,7 +112,8 @@ def init_instance(screen, jump_data):
             writer_keys = list(output[0].keys())
             output_writer = csv.DictWriter(output_handle, writer_keys)
         tui.clear_screen(screen)
-        text = [f"Instance: {instance}",
+        text = ["Press h for help",
+                f"Instance: {instance}",
                 f"Number of jumps: {len(session)}",]
         tui.display_text(screen, text)
         file_set = set()
@@ -163,6 +164,7 @@ def crank_handle(screen, jump_data):
         output_writer = instance_dict['output_writer']
         output_handle = instance_dict['output_handle']
         all_register = False
+        user_input = None
         for ii, jump_record in enumerate(session):
             axis_register = False
             jump_register = False
@@ -192,6 +194,7 @@ def crank_handle(screen, jump_data):
                 while True:
                     user_input = user_input_func(screen, jump_record, text)
                     if not check_user_input(user_input):
+                        curses.flash()
                         continue
                     if jump_annotated(user_input):
                         jump_record['solution'] = user_input
