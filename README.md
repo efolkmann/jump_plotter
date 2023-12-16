@@ -1,7 +1,6 @@
 # Jump Plotter
 
-
-[User application which displays project data solicits user annotations]
+A user application which displays data and solicits annotations from the user
 
 ## Table of Contents
 
