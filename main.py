@@ -112,7 +112,9 @@ def init_instance(screen, jump_data):
             writer_keys = list(output[0].keys())
             output_writer = csv.DictWriter(output_handle, writer_keys)
         tui.clear_screen(screen)
-        text = ["Press h for help",
+        text = ["Please be patient, the plotter is loading...",
+                "Press h for help",
+                "",
                 f"Instance: {instance}",
                 f"Number of jumps: {len(session)}",]
         tui.display_text(screen, text)
