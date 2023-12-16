@@ -19,7 +19,7 @@
 
 ## About the Project
 
-[Detailed project description]
+A user-application to faciltate data annotations
 
 ### Built With
 
