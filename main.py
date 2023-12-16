@@ -82,7 +82,7 @@ def _help(user_input):
 
 def init_instance(screen, jump_data):
     config = configparser.ConfigParser()
-    config.read('jumpplot.conf')
+    config.read('plot.conf')
     # display some text to the user
     welcome_text = ["Welcome to the Jump Plotter!",
                     "Press any key to continue..."]
@@ -229,7 +229,7 @@ def crank_handle(screen, jump_data):
 
 def main():
     config = configparser.ConfigParser()
-    config.read('./jumpplot.conf')
+    config.read('./plot.conf')
     screen = None
     screen = tui.curses_init()
     while True:

@@ -35,7 +35,7 @@ event_colors = {'1': 'C0',
 
 def plot_files(data, files,  ecf, session, axis):
     config = configparser.ConfigParser()
-    config.read('./jumpplot.conf')
+    config.read('./plot.conf')
     subsample = config.getint('params', 'subsample')
     page_size = config.getint('params', 'page_size')
     page_size = op.floordiv(page_size, subsample)

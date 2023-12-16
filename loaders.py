@@ -11,7 +11,7 @@ import browse_rto as rto
 
 def load_ecf(instance):
     config = configparser.ConfigParser()
-    config.read('./jumpplot.conf')
+    config.read('./plot.conf')
     rto_mount = config['paths']['rto']
     ecf = rto.browse_events(rto_mount)
     ecf = filter(lambda x: instance in x, ecf)
@@ -25,7 +25,7 @@ def load_ecf(instance):
 
 def already_complete():
     config = configparser.ConfigParser()
-    config.read('./jumpplot.conf')
+    config.read('./plot.conf')
     output_path = config['paths']['output']
     if os.path.exists(output_path):
         output_handle = open(output_path, 'r')
@@ -50,7 +50,7 @@ def add_primary_key(jump_dict):
 
 def read_csv(file):
     config = configparser.ConfigParser()
-    config.read('./jumpplot.conf')
+    config.read('./plot.conf')
     subsample = config.getint('params', 'subsample')
     handle = open(file, 'r')
     reader = csv.DictReader(handle)
@@ -99,7 +99,7 @@ def add_instance(jump_dict):
 
 def find_files(instance):
     config = configparser.ConfigParser()
-    config.read('./jumpplot.conf')
+    config.read('./plot.conf')
     rto_mount = config['paths']['rto']
     files = rto.browse_sensors(rto_mount)
     pat = re.compile(instance)
