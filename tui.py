@@ -82,7 +82,6 @@ def get_jump_soln(screen, bin_no):
     # get the input from the user
     user_input = screen.getch(start_y, start_x + 19)
     user_input = chr(user_input)
-    print(user_input)
     if user_input == '\n':
         user_input = default_solution
     # return the input
