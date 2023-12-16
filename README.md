@@ -39,7 +39,7 @@ To get started with this project, follow these steps:
 
 1. Clone the repository
    ```sh
-   git clone [https://github.com/4d30/jump-plotter.git]
+   git clone [https://github.com/4d30/jump-plotter.git](https://github.com/4d30/jump-plotter.git)
    ```
 2. Install dependencies
    ```sh
