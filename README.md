@@ -40,7 +40,12 @@ To get started with this project, follow these steps:
    ```sh
    git clone https://github.com/4d30/jump-plotter.git
    ```
-2. Install dependencies
+2. Install Python
+
+- Python 3.11.0+ is required
+- [https://www.python.org/downloads/](https://www.python.org/downloads/)
+
+3. Install dependencies
    ```sh
    python -m venv venv
    .\venv\Scripts\activate (Windows)
