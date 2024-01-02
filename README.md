@@ -31,7 +31,7 @@ To get started with this project, follow these steps:
 
 ### Prerequisites
 
-- Install python
+- Install python-3.11
 - Install dependencies
 
 ### Installation
@@ -45,7 +45,7 @@ To get started with this project, follow these steps:
    python -m venv venv
    .\venv\Scripts\activate (Windows)
    source venv/bin/activate (Linux/Mac)
-   pip install -r Pipfile.lock
+   pip install -r requirements.txt
    ```
 
 ## Usage
