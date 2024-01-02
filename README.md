@@ -38,8 +38,9 @@ To get started with this project, follow these steps:
 
 1. Clone the repository
    ```sh
-   git clone https://github.com/4d30/jump-plotter.git
+   git clone git@github.com:4d30/jump_plotter.git
    ```
+
 2. Install Python
 
 - Python 3.11.0+ is required
