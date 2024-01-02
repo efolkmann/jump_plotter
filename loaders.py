@@ -81,7 +81,6 @@ def load_data(files):
 def get_work(config):
     jump_data = load_jumps(config)
     complete = already_complete()
-    print(complete)
     jump_data = filter(lambda x: x['pkey'] not in complete, jump_data)
     jump_data = tuple(jump_data)
     return jump_data
