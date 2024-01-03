@@ -38,13 +38,13 @@ def display_text(screen, text):
     screen.refresh()
 
 
-
-
 def help_screen(screen):
     help_text = ["A: All remaining jumps are hardware failures",
                  "a: Hardware Failure",
-                 "b: Translate time proceeding jump backwards.",
-                 "c: Translate time preceeding jump forward.",
+                 # "b: Translate time proceeding jump backwards.",
+                 "b: Trust the time vector before the jump",
+                 # "c: Translate time preceeding jump forward.",
+                 "c: Trust the time vector after the jump.",
                  "d: Double jump: equal and opposite",
                  "h: Help (this screen)",
                  "k: Kill the sensor file (Any k will kill whole file)",
