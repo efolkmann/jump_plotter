@@ -65,6 +65,25 @@ Run
 python main.py
 ```
 
+## Notes
+
+When to label a sensor as k (kill the whole sensor file):
+
+1. Check if there is a sensor event before the jump that confirms or denies synchronization
+Check if there is a sensor event after the jump that confirms or denies synchronization
+IF yes to both, label the jump based on the results (a,b, or c)
+
+2. Check for an obvious sensor discontinuity within the jump page (black). If so, label it as a.
+
+IF you can't tell after checking 1 & 2, look at the jump duration
+
+if jump is < 0.5 seconds, make a guess (bc the consequences of being wrong are small)
+if jump is > 0.5 seconds, mark it k (bc the consequences of being wrong are large)
+
+If you have to label a too many jumps with a guess (arbitrarily defined as 4 jumps), mark the sensor file as k
+
+
+
 ## Contributing
 
 Contributions are welcome! Please follow these guidelines:
