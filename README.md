@@ -55,7 +55,7 @@ To get started with this project, follow these steps:
 
 ## Usage
 
-Edit plot.conf. Set *rto* to the path of RTO/ on your system.
+Edit plot.conf. Set *rto* to the path of RTO/ on your system and *output* to the path of the your output file for interrater agreement.
 ```sh
 nano plot.conf
 ```
