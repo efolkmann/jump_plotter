@@ -61,7 +61,8 @@ def user_input_func(screen, jump_record, text):
 
 
 def check_user_input(user_input):
-    return user_input in 'Aabcdhknq'
+    test = user_input in 'Aabcdhknq'
+    return test
 
 
 def jump_annotated(user_input):
@@ -167,6 +168,8 @@ def crank_handle(screen, jump_data):
         output_handle = instance_dict['output_handle']
         all_register = False
         user_input = None
+        kill_register = False
+        kill_file = ''
         for ii, jump_record in enumerate(session):
             axis_register = False
             jump_register = False
@@ -181,23 +184,31 @@ def crank_handle(screen, jump_data):
                 args = (data, files, ecf, session, axis)
                 if 'proc' not in locals():
                     proc = mp.Process(target=plot_files, args=args)
-                if axis_register:
-                    proc.terminate()
-                    proc.join()
-                    continue
                 if jump_register:
                     output_writer.writerow(output_row)
                     output_handle.flush()
                     break
                 if all_register:
                     break
-                if not proc.is_alive() or 'proc' not in locals():
+                if not proc.is_alive():
                     proc.start()
                 while True:
-                    user_input = user_input_func(screen, jump_record, text)
-                    if not check_user_input(user_input):
-                        curses.flash()
-                        continue
+                    user_input = None
+                    if not kill_register:
+                        user_input = user_input_func(screen, jump_record, text)
+                        if not check_user_input(user_input):
+                            curses.flash()
+                            continue
+                    else:
+                        if kill_file == jump_record['file']:
+                            user_input = 'k'
+                        else:
+                            kill_register = False
+                            kill_file = ''
+                            user_input = user_input_func(screen, jump_record, text)
+                            if not check_user_input(user_input):
+                                curses.flash()
+                                continue
                     if jump_annotated(user_input):
                         jump_record['solution'] = user_input
                         jump_register = True
@@ -207,6 +218,10 @@ def crank_handle(screen, jump_data):
                         text.append(f"Solution: {user_input}")
                         output_row['solution'] = user_input
                         tui.display_text(screen, text)
+                        if not kill_register:
+                            if user_input == 'k':
+                                kill_file = jump_record['file']
+                                kill_register = True
                         break
                     if _help(user_input):
                         tui.help_screen(screen)
@@ -214,7 +229,9 @@ def crank_handle(screen, jump_data):
                         tui.display_text(screen, text)
                         continue
                     if next_axis_selected(user_input):
-                        axis_register = True
+                        proc.terminate()
+                        proc.join()
+                        del proc
                         break
                     if _quit(user_input):
                         proc.terminate()
@@ -222,10 +239,10 @@ def crank_handle(screen, jump_data):
                         curses.endwin()
                         output_handle.close()
                         return None
-
-        proc.terminate()
-        proc.join()
-        del proc
+        if proc.is_alive() or 'proc' in locals():
+            proc.terminate()
+            proc.join()
+            del proc
 
     curses.endwin()
     output_handle.close()
@@ -240,11 +257,16 @@ def main():
     while True:
         jump_data = ldrs.get_work(config)
         jump_data = list(jump_data)
+
         A = random.randint(0, len(jump_data))
         B = random.randint(A, len(jump_data))
         jump_data = jump_data[A:B]
         first = jump_data[0]['instance']
         jump_data = filter(lambda x: x['instance'] != first, jump_data)
+#        jump_data = filter(lambda x: x['instance'] == 'LC289_9M', jump_data)
+        jump_data = tuple(jump_data)
+        if not jump_data:
+            continue
         flop = crank_handle(screen, jump_data)
         if not flop:
             break
