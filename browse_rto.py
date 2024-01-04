@@ -139,3 +139,81 @@ def browse_events(rto_mount):
 
 
 
+def is_shrd_dir(path):
+    A = 'shrd' in path.lower()
+    B = os.path.isdir(path)
+    return A and B
+
+def shrd_validation(rto_mount):
+
+    p_sub = r"[A-Z]{2}[0-9]{3}"
+    p_sub = re.compile(p_sub)
+
+    p_tp = r".*[0-9]+ (Month|Week)(s?)( Part [1-9]+)?"
+    p_tp = re.compile(p_tp)
+
+    p_shrd = r".*\.shrd"
+    p_shrd = re.compile(p_shrd)
+
+    study_data = "Corbett/Data/StudyData/sensor_original"
+    study_data = os.path.join(rto_mount, study_data)
+    sub_dirs = os.listdir(study_data)
+    for sub_dir in filter(p_sub.match, sub_dirs):
+        dir_path = os.path.join(study_data, sub_dir)
+        for tp in filter(p_tp.match, os.listdir(dir_path)):
+            tp_path = os.path.join(dir_path, tp)
+            shrd_dirs = map(os.path.join, its.repeat(tp_path), os.listdir(tp_path))
+            shrd_dirs = filter(is_shrd_dir, shrd_dirs)
+            shrd_dir = next(shrd_dirs, None)
+            if shrd_dir:
+                shrd_files = filter(p_shrd.match,
+                                      os.listdir(os.path.join(dir_path, shrd_dir)))
+            else:
+                shrd_files = filter(p_shrd.match,
+                                      os.listdir(os.path.join(dir_path, tp)))
+            for file in shrd_files:
+                shrd = os.path.join(study_data, sub_dir, tp, shrd_dir, file)
+                yield shrd
+
+def shrd_intervention(rto_mount):
+    """
+    Browse sensor intervention arm
+    """
+    p_sub = re.compile(r"[1-9]{3}-[0-9]+")
+    p_tp = re.compile(r".*[0-9]+ [MW].*")
+    p_shrd = r".*\.shrd"
+    p_shrd = re.compile(p_shrd)
+
+    study_data = os.path.join(rto_mount,
+                              "Project Corbett - Intervention/Data_Assessments/Study_Data")
+    sub_dirs = os.listdir(study_data)
+    for sub_dir in filter(p_sub.match, sub_dirs):
+        dir_path = os.path.join(study_data, sub_dir)
+        for tp in filter(p_tp.match, os.listdir(dir_path)):
+            if 'part' in tp.lower():
+                continue
+            tp_path = os.path.join(dir_path, tp)
+            shrd_dirs = map(os.path.join, its.repeat(tp_path), os.listdir(tp_path))
+            shrd_dirs = filter(is_shrd_dir, shrd_dirs)
+            shrd_dir = next(shrd_dirs, None)
+            if shrd_dir:
+                shrd_files = filter(p_shrd.match,
+                                      os.listdir(os.path.join(dir_path, shrd_dir)))
+            else:
+                shrd_files = filter(p_shrd.match,
+                                      os.listdir(os.path.join(dir_path, tp)))
+            shrd_files = filter(p_shrd.match,
+                                  os.listdir(os.path.join(dir_path, tp)))
+            for file in shrd_files:
+                shrd = os.path.join(study_data, sub_dir, tp, file)
+                yield shrd
+
+def browse_shrds(rto_mount):
+    """
+    Browse sensor validation arm
+    """
+    iterable = its.chain(shrd_validation(rto_mount),
+                         shrd_intervention(rto_mount))
+    for link in iterable:
+        yield link
+
