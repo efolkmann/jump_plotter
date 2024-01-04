@@ -40,7 +40,6 @@ To get started with this project, follow these steps:
    ```sh
    git clone git@github.com:4d30/jump_plotter.git
    ```
-
 2. Install Python
 
 - Python 3.11.0+ is required
@@ -62,7 +61,7 @@ nano plot.conf
 ```
 Run
 ```sh
-python main.py
+PYTHONUNBUFFERED=1; python main.py
 ```
 
 ## Notes
