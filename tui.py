@@ -8,7 +8,9 @@ def curses_init():
     screen = curses.initscr()
 
     # turn off echoing of keys
-    # curses.noecho()
+    curses.noecho()
+    curses.raw()
+    curses.cbreak()
 
     # enable keypad mode
     screen.keypad(True)
@@ -32,7 +34,10 @@ def display_text(screen, text):
 
     # loop through each line of text and display it on the screen
     for i, line in enumerate(text):
-        screen.addstr(start_y + i, start_x, line)
+        try:
+            screen.addstr(start_y + i, start_x, line)
+        except:
+            pass
 
     # refresh the screen to display the changes
     screen.refresh()
@@ -80,36 +85,41 @@ def get_jump_soln(screen, bin_no):
     screen.addstr(start_y, start_x, text[0])
 
     # get the input from the user
-    user_input = screen.getch(start_y, start_x + 19)
+    curses.flushinp()
+    user_input = ''
+    while user_input == '':
+        try:
+            user_input = screen.getch(start_y, start_x + 19)
+        except curses.error:
+            user_input = ''
     user_input = chr(user_input)
     if user_input == '\n':
         user_input = default_solution
-    # return the input
     return user_input
 
 
-def get_input(screen):
-    # get the height and width of the screen
-    height, width = screen.getmaxyx()
-
-    # calculate the center of the screen
-    center_y = int(height / 2)
-    text = ["Enter your input: "]
-    # calculate the starting position for the input
-    start_y = center_y + 10
-    # start_x = center_x - 10
-    start_x = 0
-
-    # display a prompt for the user to enter input
-    screen.addstr(start_y, start_x, text[0])
-
-    # get the input from the user
-    user_input = screen.getstr(start_y, start_x + 17)
-
-    # return the input
-    return user_input
-
-
+#def get_input(screen):
+#    # get the height and width of the screen
+#    height, width = screen.getmaxyx()
+#
+#    # calculate the center of the screen
+#    center_y = int(height / 2)
+#    text = ["Enter your input: "]
+#    # calculate the starting position for the input
+#    start_y = center_y + 10
+#    # start_x = center_x - 10
+#    start_x = 0
+#
+#    # display a prompt for the user to enter input
+#    screen.addstr(start_y, start_x, text[0])
+#
+#    # get the input from the user
+#    user_input = screen.getstr(start_y, start_x + 17)
+#
+#    # return the input
+#    return user_input
+#
+#
 def clear_screen(screen):
     screen.clear()
     screen.refresh()
