@@ -1,11 +1,12 @@
 #!/bin/env python
 
+import os
 import configparser
 import matplotlib.pyplot as plt
-import read_data as rdt
 import itertools as its
 import operator as op
 from array import array
+import json
 
 import read_data as rdt
 
@@ -32,10 +33,32 @@ event_colors = {'1': 'C0',
                 '102': 'C10'}
 
 
+def lookup_fw_version(file, fw_versions):
+    file = os.path.basename(file)
+    fw_version = filter(lambda x: x['sens'] == file, fw_versions)
+    fw_version = next(fw_version, {})
+    if 'fw_vers' in fw_version:
+        version = fw_version['fw_vers']
+    else:
+        version = None
+    return version
+
+def test_489_condition(file, fw_versions):
+    fw_version = lookup_fw_version(file, fw_versions)
+    is_ammonitor = op.eq(fw_version, 'N/A')
+    is_S = op.contains(file, '_S')
+    return op.and_(is_ammonitor, is_S)
+
+
+
 
 def plot_files(data, files,  ecf, session, axis):
     config = configparser.ConfigParser()
     config.read('./plot.conf')
+    fw_handle = config['paths']['fw_vers']
+    fw_handle = open(fw_handle, 'r')
+    fw_versions = json.load(fw_handle)
+    fw_handle.close()
     subsample = config.getint('params', 'subsample')
     page_size = config.getint('params', 'page_size')
     page_size = op.floordiv(page_size, subsample)
@@ -55,9 +78,16 @@ def plot_files(data, files,  ecf, session, axis):
     fig.suptitle(instance)
     fig.supxlabel('Time (s)')
     for ii, (file, datum,) in enumerate(zip(files, data)):
+
+
         time = rdt.select_time(datum, time_key)
         accl = rdt.select_instrument(datum, accl_keys)
         gyro = rdt.select_instrument(datum, gyro_keys)
+
+        add_489 = test_489_condition(file, fw_versions)
+        if add_489:
+            time = map(op.add, time, its.repeat(489))
+            time = array('d', time)
 
         jyl = rdt.calc_jyl(accl, gyro)
         jyl_max = max(jyl[1:])
