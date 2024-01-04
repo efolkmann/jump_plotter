@@ -255,16 +255,16 @@ def main():
     screen = None
     screen = tui.curses_init()
     while True:
-        jump_data = ldrs.get_work(config)
-        jump_data = list(jump_data)
-
-        A = random.randint(0, len(jump_data))
-        B = random.randint(A, len(jump_data))
-        jump_data = jump_data[A:B]
-        first = jump_data[0]['instance']
-        jump_data = filter(lambda x: x['instance'] != first, jump_data)
-#        jump_data = filter(lambda x: x['instance'] == 'LC289_9M', jump_data)
-        jump_data = tuple(jump_data)
+#        jump_data = ldrs.get_work(config)
+#        jump_data = list(jump_data)
+#
+#        A = random.randint(0, len(jump_data))
+#        B = random.randint(A, len(jump_data))
+#        jump_data = jump_data[A:B]
+#        first = jump_data[0]['instance']
+#        jump_data = filter(lambda x: x['instance'] != first, jump_data)
+#        jump_data = tuple(jump_data)
+        jump_data = ldrs.interrater_validation(config)
         if not jump_data:
             continue
         flop = crank_handle(screen, jump_data)

@@ -86,6 +86,31 @@ def get_work(config):
     return jump_data
 
 
+def interrater_validation(config):
+
+    def filt(pair):
+        A, B = pair
+        return op.contains(A['file'], B)
+
+    selection = ('BF032_12M',
+                 'LF292_12M',
+                 'LH294_1M',
+                 'LG293_3M',
+                 'CG059_6M',
+                 'LC289_9M',
+                 'CF058_12',
+                 'BO041_3M',
+                 'AI009_2W',
+                 'LE291_2W')
+    jump_data = load_jumps(config)
+
+    iterable = its.product(jump_data, selection)
+    jump_data = filter(filt, iterable)
+    jump_data = map(op.itemgetter(0), jump_data)
+    jump_data = tuple(jump_data)
+    return jump_data
+
+
 
 def add_instance(jump_dict):
     instance = jump_dict['file']
@@ -105,3 +130,17 @@ def find_files(instance):
     files = filter(pat.search, files)
     files = sorted(files)
     return files
+
+
+def main():
+    config = configparser.ConfigParser()
+    config.read('./plot.conf')
+
+    jump_data = interrater_validation(config)
+    for d in jump_data:
+        print(d)
+    breakpoint()
+    return None
+
+if __name__ == '__main__':
+    main()
