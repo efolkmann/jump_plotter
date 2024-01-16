@@ -37,8 +37,8 @@ def lookup_fw_version(file, fw_versions):
     file = os.path.basename(file)
     fw_version = filter(lambda x: x['sens'] == file, fw_versions)
     fw_version = next(fw_version, {})
-    if 'fw_vers' in fw_version:
-        version = fw_version['fw_vers']
+    if 'fw_ver' in fw_version:
+        version = fw_version['fw_ver']
     else:
         version = None
     return version
@@ -86,7 +86,7 @@ def plot_files(data, files,  ecf, session, axis):
 
         add_489 = test_489_condition(file, fw_versions)
         if add_489:
-            time = map(op.add, time, its.repeat(489))
+            time = map(op.add, time, its.repeat(489/1000))
             time = array('d', time)
 
         jyl = rdt.calc_jyl(accl, gyro)
@@ -109,6 +109,8 @@ def plot_files(data, files,  ecf, session, axis):
         axs[0].set_ylabel(f'Accl {axis} (dimensionless)')
         axs[0].set_ylim(-1, len(data))
         axs[0].set_yticklabels([])
+        if add_489:
+            axs[0].annotate('489', xy=(0, ii), color='black')
 
         axs[1].plot(time, gyro)
         axs[1].set_ylabel(f'Gyro {axis} (dimensionless)')
