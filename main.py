@@ -1,6 +1,7 @@
 #!/bin/env python
 
 import os
+import sys
 import configparser
 import itertools as its
 import operator as op
@@ -53,10 +54,13 @@ def make_jump_text(ii, jump_record):
 
 
 def user_input_func(screen, jump_record, text):
-    tui.clear_screen(screen)
-    tui.display_text(screen, text)
-    user_input = tui.get_jump_soln(screen, jump_record['bin'])
-    tui.clear_screen(screen)
+    if screen:
+        tui.clear_screen(screen)
+        tui.display_text(screen, text)
+        user_input = tui.get_jump_soln(screen, jump_record['bin'])
+        tui.clear_screen(screen)
+    else:
+        user_input = input("Enter annotation: ")
     return user_input
 
 
@@ -87,11 +91,12 @@ def init_instance(screen, jump_data):
     # display some text to the user
     welcome_text = ["Welcome to the Jump Plotter!",
                     "Press any key to continue..."]
-    tui.clear_screen(screen)
-    tui.display_text(screen, welcome_text)
+    if screen:
+        tui.clear_screen(screen)
+        tui.display_text(screen, welcome_text)
 
-    # wait for the user to press a key
-    screen.getch()
+        # wait for the user to press a key
+        screen.getch()
 
     # clear the screen
     output_path = config['paths']['output']
@@ -112,26 +117,29 @@ def init_instance(screen, jump_data):
         else:
             writer_keys = list(output[0].keys())
             output_writer = csv.DictWriter(output_handle, writer_keys)
-        tui.clear_screen(screen)
+        if screen:
+            tui.clear_screen(screen)
         text = ["Please be patient, the plotter is loading...",
                 "Press h for help",
                 "",
                 f"Instance: {instance}",
                 f"Number of jumps: {len(session)}",]
-        tui.display_text(screen, text)
+        if screen:
+            tui.display_text(screen, text)
         file_set = set()
         for ii, file in enumerate(session):
             filename = os.path.basename(file['file'])
             if filename not in file_set:
                 file_set.add(filename)
         text.append(f"Files with time jump discontinuities: {len(file_set)}")
-        tui.clear_screen(screen)
-        tui.display_text(screen, text)
+        if screen:
+            tui.clear_screen(screen)
+            tui.display_text(screen, text)
 
-        text.append("Loading Sensor Files...")
-        tui.clear_screen(screen)
-        tui.display_text(screen, text)
-        tui.clear_screen(screen)
+            text.append("Loading Sensor Files...")
+            tui.clear_screen(screen)
+            tui.display_text(screen, text)
+            tui.clear_screen(screen)
         # Find files related to this jump record
         files = ldrs.find_files(instance)
 
@@ -139,13 +147,17 @@ def init_instance(screen, jump_data):
         data = ldrs.load_data(files)
 
         text.append("Locating ECF...")
-        tui.clear_screen(screen)
         ecf = ldrs.load_ecf(instance)
-        tui.display_text(screen, text)
+        if screen:
+            tui.clear_screen(screen)
+            tui.display_text(screen, text)
 
-        text.append("Plotting...")
-        tui.clear_screen(screen)
-        tui.display_text(screen, text)
+            text.append("Plotting...")
+            tui.clear_screen(screen)
+            tui.display_text(screen, text)
+        else:
+            for tt in text:
+                print(tt)
         acc_dict = {}
         acc_dict['text'] = text
         acc_dict['data'] = data
@@ -182,16 +194,20 @@ def crank_handle(screen, jump_data):
                 continue
             for axis in iterate_axes():
                 args = (data, files, ecf, session, axis)
-                if 'proc' not in locals():
-                    proc = mp.Process(target=plot_files, args=args)
+                if screen:
+                    if 'proc' not in locals():
+                        proc = mp.Process(target=plot_files, args=args)
+                else:
+                    plot_files(*args)
                 if jump_register:
                     output_writer.writerow(output_row)
                     output_handle.flush()
                     break
                 if all_register:
                     break
-                if not proc.is_alive():
-                    proc.start()
+                if screen:
+                    if not proc.is_alive():
+                        proc.start()
                 while True:
                     user_input = None
                     if not kill_register:
@@ -229,22 +245,26 @@ def crank_handle(screen, jump_data):
                         tui.display_text(screen, text)
                         continue
                     if next_axis_selected(user_input):
-                        proc.terminate()
-                        proc.join()
-                        del proc
+                        if screen:
+                            proc.terminate()
+                            proc.join()
+                            del proc
                         break
                     if _quit(user_input):
-                        proc.terminate()
-                        proc.join()
-                        curses.endwin()
+                        if screen:
+                            proc.terminate()
+                            proc.join()
+                            curses.endwin()
                         output_handle.close()
                         return None
-        if proc.is_alive() or 'proc' in locals():
-            proc.terminate()
-            proc.join()
-            del proc
+        if screen:
+            if proc.is_alive() or 'proc' in locals():
+                proc.terminate()
+                proc.join()
+                del proc
 
-    curses.endwin()
+    if screen:
+        curses.endwin()
     output_handle.close()
     return 'Zero'
 
@@ -252,8 +272,21 @@ def crank_handle(screen, jump_data):
 def main():
     config = configparser.ConfigParser()
     config.read('./plot.conf')
-    screen = None
-    screen = tui.curses_init()
+
+    debug = False
+    instance = None
+
+    for arg in sys.argv[1:]:
+        if arg == "-d":
+            debug = True
+        elif arg.startswith("-i"):
+            instance = arg[2:]
+        else:
+            print("Invalid flag: " + arg)
+    if debug:
+        screen = None
+    else:
+        screen = tui.curses_init()
     while True:
 #        jump_data = ldrs.get_work(config)
 #        jump_data = list(jump_data)
