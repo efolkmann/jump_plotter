@@ -81,7 +81,7 @@ if jump is > 0.5 seconds, mark it k (bc the consequences of being wrong are larg
 
 If you have to label a too many jumps with a guess (arbitrarily defined as 4 jumps), mark the sensor file as k
 
-
+3. If there are > 10 jumps, mark the sensor file as k
 
 ## Contributing
 
