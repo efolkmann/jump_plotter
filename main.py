@@ -20,10 +20,6 @@ def get_session(jump_data):
     iterable = its.groupby(jump_data, op.itemgetter('instance'))
     for instance, jump_records in iterable:
         jump_records = list(jump_records)
-        bin_nos = map(op.itemgetter('bin'), jump_records)
-        bin_nos = map(op.eq, bin_nos, its.repeat('2'))
-        if all(bin_nos):
-            continue
         yield instance, jump_records
 
 
@@ -45,7 +41,7 @@ def is_event(pair):
 
 def make_jump_text(ii, jump_record):
     keus = ('Jump:', 'Bin:', 'Mag:')
-    line = (ii, jump_record['bin'], jump_record['mag'])
+    line = (ii, jump_record['bin'], jump_record['jump_mag'])
     line = zip(keus, line)
     line = its.chain.from_iterable(line)
     line = map(str, line)
@@ -53,24 +49,32 @@ def make_jump_text(ii, jump_record):
     return line
 
 
-def user_input_func(screen, jump_record, text):
+def user_input_func(screen, jump_record, text, ii):
     if screen:
         tui.clear_screen(screen)
         tui.display_text(screen, text)
         user_input = tui.get_jump_soln(screen, jump_record['bin'])
         tui.clear_screen(screen)
     else:
+        print('Bin: ' + str(jump_record['bin']))
+        print('Jump: ' + str(ii))
         user_input = input("Enter annotation: ")
     return user_input
 
 
 def check_user_input(user_input):
-    test = user_input in 'Aabcdhknq'
-    return test
+    if user_input:
+        test = user_input in 'Aabcdhknq#'
+        return test
+    else:
+        return False
 
 
 def jump_annotated(user_input):
-    return user_input in 'Aabcdk'
+    if user_input:
+        return user_input in 'Aabcdk'
+    else:
+        return False
 
 
 def next_axis_selected(user_input):
@@ -84,39 +88,17 @@ def _quit(user_input):
 def _help(user_input):
     return user_input in 'h'
 
+def _breakpoint(user_input):
+    return user_input in '#'
+
 
 def init_instance(screen, jump_data):
     config = configparser.ConfigParser()
     config.read('plot.conf')
     # display some text to the user
-    welcome_text = ["Welcome to the Jump Plotter!",
-                    "Press any key to continue..."]
-    if screen:
-        tui.clear_screen(screen)
-        tui.display_text(screen, welcome_text)
-
-        # wait for the user to press a key
-        screen.getch()
-
     # clear the screen
     output_path = config['paths']['output']
-    if os.path.exists(output_path):
-        output_handle = open(output_path, 'r+')
-        output_reader = csv.DictReader(output_handle)
-        output = tuple(output_reader)
-    else:
-        output_handle = open(output_path, 'w')
-        output = ()
     for instance, session in get_session(jump_data):
-        if not output:
-            writer_keys = list(session[0].keys())
-            writer_keys.append('solution')
-            output_writer = csv.DictWriter(output_handle, writer_keys)
-            if output_handle.tell() == 0:
-                output_writer.writeheader()
-        else:
-            writer_keys = list(output[0].keys())
-            output_writer = csv.DictWriter(output_handle, writer_keys)
         if screen:
             tui.clear_screen(screen)
         text = ["Please be patient, the plotter is loading...",
@@ -164,109 +146,175 @@ def init_instance(screen, jump_data):
         acc_dict['ecf'] = ecf
         acc_dict['files'] = files
         acc_dict['session'] = session
-        acc_dict['output_writer'] = output_writer
-        acc_dict['output_handle'] = output_handle
         yield acc_dict
 
 
+def make_default_kill_dict(session):
+    acc = {}
+    for filename, jumps in its.groupby(session, key=lambda x: x['file']):
+        jumps = map(op.itemgetter('in_ev_window'), jumps)
+        jumps = map(int, jumps)
+        jumps = filter(bool, jumps)
+        acc[filename] = len(tuple(jumps)) > 9
+    return acc
+
+
+def save_output(output_rows):
+    return None
+
 def crank_handle(screen, jump_data):
-    for instance_dict in init_instance(screen, jump_data):
-        text = instance_dict['text']
-        data = instance_dict['data']
-        ecf = instance_dict['ecf']
-        files = instance_dict['files']
-        session = instance_dict['session']
-        output_writer = instance_dict['output_writer']
-        output_handle = instance_dict['output_handle']
-        all_register = False
-        user_input = None
-        kill_register = False
-        kill_file = ''
-        for ii, jump_record in enumerate(session):
-            axis_register = False
-            jump_register = False
-            text.append(make_jump_text(ii, jump_record))
-            output_row = jump_record
-            if all_register and 'user_input' in locals():
-                output_row['solution'] = user_input
-                output_writer.writerow(output_row)
-                output_handle.flush()
-                continue
-            for axis in iterate_axes():
-                args = (data, files, ecf, session, axis)
-                if screen:
-                    if 'proc' not in locals():
-                        proc = mp.Process(target=plot_files, args=args)
+    instance_dict = next(init_instance(screen, jump_data), None)
+    if not instance_dict:
+        return None
+    text = instance_dict['text']
+    data = instance_dict['data']
+    ecf = instance_dict['ecf']
+    files = instance_dict['files']
+    session = instance_dict['session']
+    default_kill_dict = make_default_kill_dict(session)
+    all_register = False
+    user_input = None
+    kill_register = False
+    exit_register = False
+    kill_file = ''
+    output_rows = []
+    for ii, jump_record in enumerate(session):
+        if exit_register:
+            break
+        axis_register = False
+        jump_register = False
+        if len(text) > 10:
+            end = text[-2:]
+            text = text[:7] + end
+        text.append(make_jump_text(ii, jump_record))
+        output_row = jump_record
+        if all_register and 'user_input' in locals():
+            output_row['solution'] = user_input
+            output_rows.append(output_row)
+            continue
+        for axis in iterate_axes():
+            break_registers = (exit_register, axis_register, all_register)
+            if any(break_registers):
+                break
+            args = (data, files, ecf, session, axis)
+            if screen:
+                if 'proc' not in locals():
+                    proc = mp.Process(target=plot_files, args=args)
+            else:
+                pass
+                plot_files(*args)
+            if jump_register:
+                output_rows.append(output_row)
+                break
+            if screen:
+                if not proc.is_alive():
+                    proc.start()
+            while True:
+                if exit_register:
+                    break
+                user_input = None
+                if not kill_register:
+                    if default_kill_dict[jump_record['file']]:
+                        user_input = 'k'
+                    else:
+                        if jump_record['bin'] == '2':
+                            user_input = 'd'
+                        else:
+                            user_input = user_input_func(screen,
+                                                         jump_record,
+                                                         text,
+                                                         ii)
+                            if not check_user_input(user_input):
+                                if screen:
+                                    curses.flash()
+                                continue
                 else:
-                    plot_files(*args)
-                if jump_register:
-                    output_writer.writerow(output_row)
-                    output_handle.flush()
-                    break
-                if all_register:
-                    break
-                if screen:
-                    if not proc.is_alive():
-                        proc.start()
-                while True:
-                    user_input = None
-                    if not kill_register:
-                        user_input = user_input_func(screen, jump_record, text)
+                    if kill_file == jump_record['file']:
+                        user_input = 'k'
+                    else:
+                        kill_register = False
+                        kill_file = ''
+                        user_input = user_input_func(screen, jump_record,
+                                                     text, ii)
                         if not check_user_input(user_input):
                             curses.flash()
                             continue
+                if jump_annotated(user_input):
+                    jump_record['solution'] = user_input
+                    jump_register = True
+                    if user_input == 'A':
+                        user_input = user_input.lower()
+                        all_register = True
+                    text.append(f"Solution: {user_input}")
+                    output_row['solution'] = user_input
+                    output_rows.append(output_row)
+                    if screen:
+                        tui.display_text(screen, text)
                     else:
-                        if kill_file == jump_record['file']:
-                            user_input = 'k'
-                        else:
-                            kill_register = False
-                            kill_file = ''
-                            user_input = user_input_func(screen, jump_record, text)
-                            if not check_user_input(user_input):
-                                curses.flash()
-                                continue
-                    if jump_annotated(user_input):
-                        jump_record['solution'] = user_input
-                        jump_register = True
-                        if user_input == 'A':
-                            user_input = user_input.lower()
-                            all_register = True
-                        text.append(f"Solution: {user_input}")
-                        output_row['solution'] = user_input
-                        tui.display_text(screen, text)
-                        if not kill_register:
-                            if user_input == 'k':
-                                kill_file = jump_record['file']
-                                kill_register = True
-                        break
-                    if _help(user_input):
-                        tui.help_screen(screen)
-                        tui.clear_screen(screen)
-                        tui.display_text(screen, text)
-                        continue
-                    if next_axis_selected(user_input):
-                        if screen:
+                        for tt in text:
+                            print(tt)
+                    if not kill_register:
+                        if user_input == 'k':
+                            kill_file = jump_record['file']
+                            kill_register = True
+                    break
+                if _help(user_input):
+                    tui.help_screen(screen)
+                    tui.clear_screen(screen)
+                    tui.display_text(screen, text)
+                    continue
+                if next_axis_selected(user_input):
+                    if screen:
+                        proc.terminate()
+                        proc.join()
+                        del proc
+                    break
+                if _breakpoint(user_input):
+                    if screen:
+                        proc.terminate()
+                        proc.join()
+                        del proc
+                    else:
+                        breakpoint()
+                if _quit(user_input):
+                    if screen:
+                        if proc.is_alive() or 'proc' in locals():
                             proc.terminate()
                             proc.join()
                             del proc
-                        break
-                    if _quit(user_input):
-                        if screen:
-                            proc.terminate()
-                            proc.join()
-                            curses.endwin()
-                        output_handle.close()
-                        return None
-        if screen:
-            if proc.is_alive() or 'proc' in locals():
+                        curses.endwin()
+                    exit_register = True
+                    break
+#                    output_handle.close()
+
+    if screen:
+        if 'proc' in locals():
+            if proc.is_alive():
                 proc.terminate()
                 proc.join()
                 del proc
 
     if screen:
         curses.endwin()
+    config = configparser.ConfigParser()
+    config.read('./plot.conf')
+    output_path = config['paths']['output']
+    writer_keys = ('pkey', 'file', 'instance', 'in_ev_window',
+                       'jump_time', 'jump_idx', 'jump_mag', 'bin',
+                       'solution',)
+    if os.path.getsize(output_path) > 0:
+        output_handle = open(output_path, 'a')
+    else:
+        output_handle = open(output_path, 'w')
+        output_writer = csv.DictWriter(output_handle, writer_keys)
+        output_writer.writeheader()
+
+    output_writer = csv.DictWriter(output_handle, writer_keys)
+    output_writer.writerows(output_rows)
+
+    output_handle.flush()
     output_handle.close()
-    return 'Zero'
+    return exit_register
 
 
 def main():
@@ -275,6 +323,7 @@ def main():
 
     debug = False
     instance = None
+    exit_register = False
 
     for arg in sys.argv[1:]:
         if arg == "-d":
@@ -287,23 +336,30 @@ def main():
         screen = None
     else:
         screen = tui.curses_init()
-    while True:
-#        jump_data = ldrs.get_work(config)
-#        jump_data = list(jump_data)
-#
-#        A = random.randint(0, len(jump_data))
-#        B = random.randint(A, len(jump_data))
-#        jump_data = jump_data[A:B]
-#        first = jump_data[0]['instance']
-#        jump_data = filter(lambda x: x['instance'] != first, jump_data)
-#        jump_data = tuple(jump_data)
-        jump_data = ldrs.interrater_validation(config)
-        if not jump_data:
-            continue
-        flop = crank_handle(screen, jump_data)
-        if not flop:
-            break
+        welcome_text = ["Welcome to the Jump Plotter!",
+                        "Press any key to continue..."]
+        tui.clear_screen(screen)
+        tui.display_text(screen, welcome_text)
 
+        # wait for the user to press a key
+        screen.getch()
+        curses.endwin()
+    while True:
+        jump_data = ldrs.interrater_validation(config)
+        jump_data = ldrs.get_work(config, jump_data)
+        if len(jump_data) == 0:
+            print("No work left, thanks!")
+            return None
+        jump_data = ldrs.select_one(jump_data)
+        if debug:
+            screen = None
+        else:
+            screen = tui.curses_init()
+        exit_register = crank_handle(screen, jump_data)
+        if screen:
+            curses.endwin()
+        if exit_register:
+            return None
     return None
 
 
