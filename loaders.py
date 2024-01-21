@@ -1,11 +1,13 @@
 #!/bin/env python
 
-import itertools as its
-import operator as op
 import os
 import re
 import csv
 import configparser
+import itertools as its
+import operator as op
+import random
+
 import browse_rto as rto
 
 
@@ -38,14 +40,14 @@ def already_complete():
     return done
 
 
-def make_primary_key(jump_dict):
-    pkey = '_'.join([jump_dict['file'], jump_dict['idx']])
-    return pkey
-
-
-def add_primary_key(jump_dict):
-    jump_dict['pkey'] = make_primary_key(jump_dict)
-    return jump_dict
+#def make_primary_key(jump_dict):
+#    pkey = '_'.join([jump_dict['file'], jump_dict['idx']])
+#    return pkey
+#
+#
+#def add_primary_key(jump_dict):
+#    jump_dict['pkey'] = make_primary_key(jump_dict)
+#    return jump_dict
 
 
 def read_csv(file):
@@ -64,10 +66,10 @@ def read_csv(file):
 def load_jumps(config):
     jump_file = config['paths']['jump_bins']
     jump_handle = open(jump_file, 'r')
-    reader = csv.DictReader(jump_handle)
-    jump_data = map(add_instance, reader)
-    jump_data = map(add_primary_key, jump_data)
-    jump_data = sorted(jump_data, key=op.itemgetter('file'))
+    jump_data = csv.DictReader(jump_handle)
+#    jump_data = map(add_instance, reader)
+#    jump_data = map(add_primary_key, jump_data)
+    jump_data = sorted(jump_data, key=op.itemgetter('file', 'jump_idx'))
     jump_data = tuple(jump_data)
     jump_handle.close()
     return jump_data
@@ -78,8 +80,14 @@ def load_data(files):
     data = tuple(data)
     return data
 
-def get_work(config):
-    jump_data = load_jumps(config)
+def get_work(config, jump_data):
+
+    def in_window(jump):
+        foo = jump['in_ev_window']
+        foo = int(foo)
+        return bool(foo)
+
+    jump_data = filter(in_window, jump_data)
     complete = already_complete()
     jump_data = filter(lambda x: x['pkey'] not in complete, jump_data)
     jump_data = tuple(jump_data)
@@ -90,8 +98,9 @@ def interrater_validation(config):
 
     def filt(pair):
         A, B = pair
-        return op.contains(A['file'], B)
+        return op.eq(A['instance'], B)
 
+    # Interrater round one
     selection = ('BF032_12M',
                  'LF292_12M',
                  'LH294_1M',
@@ -102,6 +111,18 @@ def interrater_validation(config):
                  'BO041_3M',
                  'AI009_2W',
                  'LE291_2W')
+
+    # Interrater round two
+    selection = ('CE057_4M',
+                 'CS071_6M',
+                 'CW075_6M',
+                 'AZ026_6M',
+                 'DD082_P38W',
+                 'DS097_3M',
+                 '115-111_3M',
+                 'BL038_3M-2',
+                 'BU047_6M',
+                 'BH034_3M')
     jump_data = load_jumps(config)
 
     iterable = its.product(jump_data, selection)
@@ -132,13 +153,31 @@ def find_files(instance):
     return files
 
 
+def select_one(jump_data):
+    instances = map(op.itemgetter('instance'), jump_data)
+    instances = tuple(set(instances))
+    instance = random.choice(instances)
+    jump_data = filter(lambda x: x['instance'] == instance, jump_data)
+    jump_data = sorted(jump_data, key=op.itemgetter('file', 'jump_idx'))
+    jump_data = tuple(jump_data)
+    return jump_data
+
+
+
 def main():
     config = configparser.ConfigParser()
     config.read('./plot.conf')
 
+#    jump_data = get_work(config)
+#    for d in jump_data:
+#        print(d)
+#    breakpoint()
+    jump_data = load_jumps(config)
     jump_data = interrater_validation(config)
-    for d in jump_data:
-        print(d)
+    jump_data = get_work(config, jump_data)
+    jump_data = select_one(jump_data)
+#    for d in jump_data:
+#        print(d)
     breakpoint()
     return None
 
