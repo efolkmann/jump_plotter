@@ -110,7 +110,7 @@ def plot_files(data, files,  ecf, session, axis):
         axs[0].set_ylim(-1, len(data))
         axs[0].set_yticklabels([])
         if add_489:
-            axs[0].annotate('489', xy=(0, ii), color='black')
+            axs[0].annotate('489', xy=(-50, ii), color='black')
 
         axs[1].plot(time, gyro)
         axs[1].set_ylabel(f'Gyro {axis} (dimensionless)')
@@ -119,7 +119,7 @@ def plot_files(data, files,  ecf, session, axis):
 
         for jump_no, jump_record in enumerate(session):
             if check_for_jumps(file, jump_record):
-                idx = int(jump_record['idx'])
+                idx = int(jump_record['jump_idx'])
                 idx = op.floordiv(idx, subsample)
                 # _bin = int(jump_record['bin'])
                 slc = slice(idx, idx+page_size)
