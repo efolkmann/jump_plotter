@@ -16,7 +16,7 @@ def curses_init():
     screen.keypad(True)
 
     # clear the screen
-    screen.clear()
+    screen.erase()
     return screen
 
 
@@ -85,16 +85,16 @@ def get_jump_soln(screen, bin_no):
     screen.addstr(start_y, start_x, text[0])
 
     # get the input from the user
+    # curses.flushinp()
+    user_input = screen.getch(start_y, start_x + 19)
     curses.flushinp()
-    user_input = ''
-    while user_input == '':
-        try:
-            user_input = screen.getch(start_y, start_x + 19)
-        except curses.error:
-            user_input = ''
     user_input = chr(user_input)
+
+    screen.refresh()
+
+    screen.erase()
     if user_input == '\n':
-        user_input = default_solution
+        return default_solution
     return user_input
 
 
@@ -121,5 +121,5 @@ def get_jump_soln(screen, bin_no):
 #
 #
 def clear_screen(screen):
-    screen.clear()
+    screen.erase()
     screen.refresh()
