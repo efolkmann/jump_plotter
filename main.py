@@ -7,6 +7,7 @@ import itertools as its
 import operator as op
 import random
 import csv
+import json
 import curses
 import multiprocessing as mp
 
@@ -309,6 +310,8 @@ def crank_handle(screen, jump_data):
         output_writer = csv.DictWriter(output_handle, writer_keys)
         output_writer.writeheader()
 
+    unique_output = set([json.dumps(x) for x in output_rows])
+    output_rows = [json.loads(x) for x in unique_output]
     output_writer = csv.DictWriter(output_handle, writer_keys)
     output_writer.writerows(output_rows)
 
