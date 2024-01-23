@@ -123,6 +123,21 @@ def interrater_validation(config):
                  'BL038_3M-2',
                  'BU047_6M',
                  'BH034_3M')
+
+
+    # Interrater round three
+    selection = ('AA001_9M',
+                 'BT046_2W',
+                 'DE083_3M',
+                 'LB288_3M',
+                 'UB522_1M',
+                 'UG522_3M',
+                 'AR018_9M',
+                 'BV048_2W',
+                 'CO067_1M',
+                 'EP120_6M',)
+
+
     jump_data = load_jumps(config)
 
     iterable = its.product(jump_data, selection)
