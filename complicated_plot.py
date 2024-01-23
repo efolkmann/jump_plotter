@@ -127,12 +127,12 @@ def plot_files(data, files,  ecf, session, axis):
                 color = list(event_colors.keys())[ii]
                 color = event_colors[color]
 
-                axs[0].plot(time[slc], accl[slc], color='black', lw=0.75)
+                axs[0].scatter(time[slc], accl[slc], color='black', lw=0.75)
                 axs[0].annotate(f'{jump_no}',
                                 xy=(time[idx], accl[idx]*1.05),
                                 color='black',
                                 )
-                axs[1].plot(time[slc], gyro[slc], color='black', lw=0.75)
+                axs[1].scatter(time[slc], gyro[slc], color='black', lw=0.75)
                 axs[2].plot(time, jyl, color=color)
         axs[2].set_yticklabels([])
         axs[2].set_ylim(-1, len(data))
