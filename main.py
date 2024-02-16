@@ -31,7 +31,7 @@ def iterate_axes():
 
 
 def check_for_jumps(file, jump_record):
-    return op.contains(file, jump_record['file'])
+    return op.contains(file, jump_record['csv_path'])
 
 
 def is_event(pair):
@@ -42,7 +42,7 @@ def is_event(pair):
 
 def make_jump_text(ii, jump_record):
     keus = ('Jump:', 'Bin:', 'Mag:')
-    line = (ii, jump_record['bin'], jump_record['jump_mag'])
+    line = (ii, jump_record['jump_bin'], jump_record['jump_mag'])
     line = zip(keus, line)
     line = its.chain.from_iterable(line)
     line = map(str, line)
@@ -54,10 +54,10 @@ def user_input_func(screen, jump_record, text, ii):
     if screen:
         tui.clear_screen(screen)
         tui.display_text(screen, text)
-        user_input = tui.get_jump_soln(screen, jump_record['bin'])
+        user_input = tui.get_jump_soln(screen, jump_record['jump_bin'])
         tui.clear_screen(screen)
     else:
-        print('Bin: ' + str(jump_record['bin']))
+        print('Bin: ' + str(jump_record['jump_bin']))
         print('Jump: ' + str(ii))
         user_input = input("Enter annotation: ")
     return user_input
@@ -111,7 +111,7 @@ def init_instance(screen, jump_data):
             tui.display_text(screen, text)
         file_set = set()
         for ii, file in enumerate(session):
-            filename = os.path.basename(file['file'])
+            filename = os.path.basename(file['csv_path'])
             if filename not in file_set:
                 file_set.add(filename)
         text.append(f"Files with time jump discontinuities: {len(file_set)}")
@@ -152,9 +152,9 @@ def init_instance(screen, jump_data):
 
 def make_default_kill_dict(session):
     acc = {}
-    for filename, jumps in its.groupby(session, key=lambda x: x['file']):
+    for filename, jumps in its.groupby(session, key=lambda x: x['csv_path']):
         jumps = map(op.itemgetter('in_ev_window'), jumps)
-        jumps = map(int, jumps)
+        jumps = map(op.eq, its.repeat('t'), jumps)
         jumps = filter(bool, jumps)
         acc[filename] = len(tuple(jumps)) > 9
     return acc
@@ -221,14 +221,14 @@ def crank_handle(screen, jump_data):
                 if not kill_register:
                     # Check if this file has > 9 jumps, if so set
                     # to kill
-                    if default_kill_dict[jump_record['file']]:
+                    if default_kill_dict[jump_record['csv_path']]:
                         user_input = 'k'
                     else:
                         # When fewer than 10 jumps, check if th current
                         # jump  is a paired jump and set default solutions
-                        if jump_record['bin'] == '1':
+                        if jump_record['jump_bin'] == '1':
                             user_input = 'd'
-                        elif jump_record['bin'] == '2':
+                        elif jump_record['jump_bin'] == '2':
                             user_input = 'e'
                         # Otherwise, get user input
                         else:
@@ -243,7 +243,7 @@ def crank_handle(screen, jump_data):
                 # When the kill-register is set
                 else:
                     # Check if the kill-file is set to the current file
-                    if kill_file == jump_record['file']:
+                    if kill_file == jump_record['csv_path']:
                         user_input = 'k'
                     # If the kill-file is not the current file, reset
                     # the kill register and get user input
@@ -275,7 +275,7 @@ def crank_handle(screen, jump_data):
                             print(tt)
                     if not kill_register:
                         if user_input == 'k':
-                            kill_file = jump_record['file']
+                            kill_file = jump_record['csv_path']
                             kill_register = True
                     break
                 if _help(user_input):
@@ -319,8 +319,8 @@ def crank_handle(screen, jump_data):
     config = configparser.ConfigParser()
     config.read('./plot.conf')
     output_path = config['paths']['output']
-    writer_keys = ('pkey', 'file', 'instance', 'in_ev_window',
-                       'jump_time', 'jump_idx', 'jump_mag', 'bin',
+    writer_keys = ('pkey', 'csv_path', 'instance', 'in_ev_window',
+                       'jump_time', 'jump_idx', 'jump_mag', 'jump_bin',
                        'solution',)
     if os.path.getsize(output_path) > 0:
         output_handle = open(output_path, 'a')

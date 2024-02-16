@@ -121,7 +121,7 @@ def plot_files(data, files,  ecf, session, axis):
             if check_for_jumps(file, jump_record):
                 idx = int(jump_record['jump_idx'])
                 idx = op.floordiv(idx, subsample)
-                # _bin = int(jump_record['bin'])
+                # _bin = int(jump_record['jump_bin'])
                 slc = slice(idx, idx+page_size)
 
                 color = list(event_colors.keys())[ii]
@@ -164,7 +164,7 @@ def iterate_axes():
 
 
 def check_for_jumps(file, jump_record):
-    return op.contains(file, jump_record['file'])
+    return op.contains(file, jump_record['csv_path'])
 
 def get_events(ecf):
     for pair in filter(is_event, its.pairwise(ecf)):

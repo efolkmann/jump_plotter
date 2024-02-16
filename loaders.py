@@ -67,9 +67,10 @@ def load_jumps(config):
     jump_file = config['paths']['jump_bins']
     jump_handle = open(jump_file, 'r')
     jump_data = csv.DictReader(jump_handle)
-#    jump_data = map(add_instance, reader)
+    jump_data = tuple(jump_data)
+    jump_data = map(add_instance, jump_data)
 #    jump_data = map(add_primary_key, jump_data)
-    jump_data = sorted(jump_data, key=op.itemgetter('file', 'jump_idx'))
+    jump_data = sorted(jump_data, key=op.itemgetter('csv_path', 'jump_idx'))
     jump_data = tuple(jump_data)
     jump_handle.close()
     return jump_data
@@ -88,7 +89,7 @@ def get_work(config, jump_data):
 
     jump_data = filter(in_window, jump_data)
     complete = already_complete()
-    jump_data = filter(lambda x: x['pkey'] not in complete, jump_data)
+    jump_data = filter(lambda x: x['jump_key'] not in complete, jump_data)
     jump_data = filter(lambda x: '_3M_' in x['csv_path'], jump_data)
     jump_data = tuple(jump_data)
     return jump_data
@@ -154,7 +155,7 @@ def interrater_validation(config):
 
 
 def add_instance(jump_dict):
-    instance = jump_dict['file']
+    instance = jump_dict['csv_path']
     instance = instance.split('_')
     instance = instance[0:2]
     instance = '_'.join(instance)
@@ -178,7 +179,7 @@ def select_one(jump_data):
     instances = tuple(set(instances))
     instance = random.choice(instances)
     jump_data = filter(lambda x: x['instance'] == instance, jump_data)
-    jump_data = sorted(jump_data, key=op.itemgetter('file', 'jump_idx'))
+    jump_data = sorted(jump_data, key=op.itemgetter('csv_path', 'jump_idx'))
     jump_data = tuple(jump_data)
     return jump_data
 
