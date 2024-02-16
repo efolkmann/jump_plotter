@@ -80,16 +80,16 @@ def load_data(files):
     data = tuple(data)
     return data
 
-def get_work(config, jump_data):
 
+def get_work(config, jump_data):
     def in_window(jump):
         foo = jump['in_ev_window']
-        foo = int(foo)
-        return bool(foo)
+        return op.eq(foo, 't')
 
     jump_data = filter(in_window, jump_data)
     complete = already_complete()
     jump_data = filter(lambda x: x['pkey'] not in complete, jump_data)
+    jump_data = filter(lambda x: '_3M_' in x['csv_path'], jump_data)
     jump_data = tuple(jump_data)
     return jump_data
 

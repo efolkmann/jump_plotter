@@ -367,7 +367,8 @@ def main():
         screen.getch()
         curses.endwin()
     while True:
-        jump_data = ldrs.interrater_validation(config)
+        # ldrs.get_work is hard-coded to select 3M jumps
+        jump_data = ldrs.load_jumps(config)
         jump_data = ldrs.get_work(config, jump_data)
         if len(jump_data) == 0:
             print("No work left, thanks!")
