@@ -65,7 +65,7 @@ def user_input_func(screen, jump_record, text, ii):
 
 def check_user_input(user_input):
     if user_input:
-        test = user_input in 'Aabcdhknq#'
+        test = user_input in 'Aabcdehknq#'
         return test
     else:
         return False
@@ -73,7 +73,7 @@ def check_user_input(user_input):
 
 def jump_annotated(user_input):
     if user_input:
-        return user_input in 'Aabcdk'
+        return user_input in 'Aabcdek'
     else:
         return False
 
@@ -214,12 +214,23 @@ def crank_handle(screen, jump_data):
                 if exit_register:
                     break
                 user_input = None
+                # Get user input
+                #
+                # First, check the kill register. If it's not set,
+                # get user input
                 if not kill_register:
+                    # Check if this file has > 9 jumps, if so set
+                    # to kill
                     if default_kill_dict[jump_record['file']]:
                         user_input = 'k'
                     else:
-                        if jump_record['bin'] == '2':
+                        # When fewer than 10 jumps, check if th current
+                        # jump  is a paired jump and set default solutions
+                        if jump_record['bin'] == '1':
                             user_input = 'd'
+                        elif jump_record['bin'] == '2':
+                            user_input = 'e'
+                        # Otherwise, get user input
                         else:
                             user_input = user_input_func(screen,
                                                          jump_record,
@@ -229,9 +240,13 @@ def crank_handle(screen, jump_data):
                                 if screen:
                                     curses.flash()
                                 continue
+                # When the kill-register is set
                 else:
+                    # Check if the kill-file is set to the current file
                     if kill_file == jump_record['file']:
                         user_input = 'k'
+                    # If the kill-file is not the current file, reset
+                    # the kill register and get user input
                     else:
                         kill_register = False
                         kill_file = ''
@@ -240,6 +255,10 @@ def crank_handle(screen, jump_data):
                         if not check_user_input(user_input):
                             curses.flash()
                             continue
+                # Use user-input
+                #
+                # This code only executes if a jump_annotations was
+                # entered above.
                 if jump_annotated(user_input):
                     jump_record['solution'] = user_input
                     jump_register = True

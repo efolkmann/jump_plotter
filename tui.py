@@ -71,8 +71,10 @@ def get_jump_soln(screen, bin_no):
         default_solution = "a"
     elif bin_no == '4':
         default_solution = ""
-    elif bin_no == '2':
+    elif bin_no == '1':
         default_solution = "d"
+    elif bin_no == '2':
+        default_solution = "e"
     else:
         default_solution = ""
     text = [f"Enter solution [{default_solution}]: "]

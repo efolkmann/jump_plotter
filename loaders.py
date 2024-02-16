@@ -137,6 +137,11 @@ def interrater_validation(config):
                  'CO067_1M',
                  'EP120_6M',)
 
+    # Interrater round three meeting
+
+    selection = ('UB522_1M',
+                 'CO067_1M',)
+
 
     jump_data = load_jumps(config)
 
