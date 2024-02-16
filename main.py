@@ -190,7 +190,7 @@ def crank_handle(screen, jump_data):
         text.append(make_jump_text(ii, jump_record))
         output_row = jump_record
         if all_register and 'user_input' in locals():
-            output_row['solution'] = user_input
+            output_row['jump_soln'] = user_input
             output_rows.append(output_row)
             continue
         for axis in iterate_axes():
@@ -260,13 +260,13 @@ def crank_handle(screen, jump_data):
                 # This code only executes if a jump_annotations was
                 # entered above.
                 if jump_annotated(user_input):
-                    jump_record['solution'] = user_input
+                    jump_record['jump_soln'] = user_input
                     jump_register = True
                     if user_input == 'A':
                         user_input = user_input.lower()
                         all_register = True
                     text.append(f"Solution: {user_input}")
-                    output_row['solution'] = user_input
+                    output_row['jump_soln'] = user_input
                     output_rows.append(output_row)
                     if screen:
                         tui.display_text(screen, text)
@@ -319,9 +319,9 @@ def crank_handle(screen, jump_data):
     config = configparser.ConfigParser()
     config.read('./plot.conf')
     output_path = config['paths']['output']
-    writer_keys = ('pkey', 'csv_path', 'instance', 'in_ev_window',
+    writer_keys = ('jump_key', 'csv_path', 'instance', 'in_ev_window',
                        'jump_time', 'jump_idx', 'jump_mag', 'jump_bin',
-                       'solution',)
+                       'jump_soln',)
     if os.path.getsize(output_path) > 0:
         output_handle = open(output_path, 'a')
     else:
