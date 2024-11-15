@@ -24,11 +24,12 @@ async def load_file(file: str) -> dict:
     handle.close()
     acc = {}
     for key in reader[0].keys():
-        data = map(op.itemgetter(key), reader)
-        data = map(lambda x: 'nan' if x == '' else x, data)
-        data = map(float, data)
-        data = array('d', data)
-        acc[key] = data
+        if key != 'Epoch Time(yyyy-MM-dd HH:mm:ss.SSS ZZZZ)':
+            data = map(op.itemgetter(key), reader)
+            data = map(lambda x: 'nan' if x == '' else x, data)
+            data = map(float, data)
+            data = array('d', data)
+            acc[key] = data
     return acc
 
 
