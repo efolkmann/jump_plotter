@@ -55,13 +55,18 @@ To get started with this project, follow these steps:
 
 ## Usage
 
-Edit plot.conf. Set *rto* to the path of RTO/ on your system and *output* to the path of the your output file for interrater agreement.
+Edit config.ini. Set *input* to the path of the your input zip file.
 ```sh
-nano plot.conf
+nano config.ini
 ```
 Run
 ```sh
-PYTHONUNBUFFERED=1; python main.py
+# activate venv if necessary
+.\venv\Scripts\activate (Windows)
+source venv/bin/activate (Linux/Mac)
+
+
+python jump_plotter_nu.py
 ```
 
 ## Notes
