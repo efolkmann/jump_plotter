@@ -1,127 +1,104 @@
 #!/bin/env python
 
-import curses
+import sys
+import unicurses as curses
+
+welcome_text = ["Welcome to Jump Plotter", "Press any key to continue..."]
+no_sessions_text = ["No Sessions without annotations found",
+                    "Press any key to exit..."]
+unpacking_session_text = ["Unpacking Session", "Please be patient..."]
+no_input_text= ["No Data Found",
+                "Please copy the zipfile to jump_plotter_nu/ directory",
+                "Press any key to exit..."]
+loading_session_text = ["Loading Session Files...", ]
+locating_jumps_text = ["Locating Jumps...", ]
+calculating_diffs_text = ["Calculating Differences...", ]
+resolving_events_text = ["Resolving Events...", ]
+plotting_text = ["Plotting...", ]
+help_text = ["a: Hardware Failure -- Synchronized before AND after jump",
+             "b: Trust the time vector before the jump",
+             "c: Trust the time vector after the jump.",
+             "d: Double jump: equal and opposite -- first of two",
+             "e: Double jump: equal and opposite -- second of two",
+             "h: Help (this screen)",
+             "k: Kill the sensor file (Any k will kill whole file)",
+             'n: Plot the next axis (X, Y, or Z)',
+             "q: Quit",
+             "Press any key to continue..."]
+thanks_text = ["Thanks for using Jump Plotter", "Press any key to exit..."]
 
 
-def curses_init():
-    # initialize curses
-    screen = curses.initscr()
-
-    # turn off echoing of keys
+def init_screen():
+    stdscr = curses.initscr()
     curses.noecho()
-    curses.raw()
     curses.cbreak()
-
-    # enable keypad mode
-    screen.keypad(True)
-
-    # clear the screen
-    screen.erase()
-    return screen
+    curses.clear()
+    curses.keypad(stdscr, 1)
+    return stdscr
 
 
-# define a function to display text to the user
-def display_text(screen, text):
-    # get the height and width of the screen
-    height, width = screen.getmaxyx()
+def close_screen(stdscr):
+    if stdscr:
+        curses.echo()
+        curses.nocbreak()
+        curses.keypad(stdscr, 0)
+        curses.clear()
+        curses.endwin()
+    return None
 
-    # calculate the center of the screen
-    center_y = int(height / 3)
-
-    # calculate the starting position for the text
-    start_y = center_y - int(len(text) / 2)
-    start_x = 0
-
-    # loop through each line of text and display it on the screen
-    for i, line in enumerate(text):
-        try:
-            screen.addstr(start_y + i, start_x, line)
-        except:
-            pass
-
-    # refresh the screen to display the changes
-    screen.refresh()
+def thanks_and_exit(stdscr):
+    clear_screen(stdscr)
+    display_text(stdscr, thanks_text)
+    # stdscr.getch()
+    curses.getch()
+    close_screen(stdscr)
+    sys.exit()
 
 
-def help_screen(screen):
-    help_text = ["A: All remaining jumps are hardware failures",
-                 "a: Hardware Failure",
-                 # "b: Translate time proceeding jump backwards.",
-                 "b: Trust the time vector before the jump",
-                 # "c: Translate time preceeding jump forward.",
-                 "c: Trust the time vector after the jump.",
-                 "d: Double jump: equal and opposite",
-                 "h: Help (this screen)",
-                 "k: Kill the sensor file (Any k will kill whole file)",
-                 'n: Plot the next axis (X, Y, or Z)',
-                 "q: Quit",
-                 "Press any key to continue..."]
-    clear_screen(screen)
-    display_text(screen, help_text)
-    screen.getch()
 
+def welcome_screen(stdscr):
+    if stdscr:
+        display_text(stdscr, welcome_text)
+        curses.getch()
 
-def get_jump_soln(screen, bin_no):
-    # get the height and width of the screen
-    height, width = screen.getmaxyx()
-
-    # calculate the center of the screen
-    center_y = int(height / 2)
-    if bin_no == '3':
-        default_solution = "a"
-    elif bin_no == '4':
-        default_solution = ""
-    elif bin_no == '1':
-        default_solution = "d"
-    elif bin_no == '2':
-        default_solution = "e"
+        clear_screen(stdscr)
     else:
-        default_solution = ""
-    text = [f"Enter solution [{default_solution}]: "]
-    # calculate the starting position for the input
-    start_y = center_y + 10
-    # start_x = center_x - 10
-    start_x = 0
-
-    # display a prompt for the user to enter input
-    screen.addstr(start_y, start_x, text[0])
-
-    # get the input from the user
-    # curses.flushinp()
-    user_input = screen.getch(start_y, start_x + 19)
-    curses.flushinp()
-    user_input = chr(user_input)
-
-    screen.refresh()
-
-    screen.erase()
-    if user_input == '\n':
-        return default_solution
-    return user_input
+        tuple(map(print, welcome_text))
+    return None
 
 
-#def get_input(screen):
-#    # get the height and width of the screen
-#    height, width = screen.getmaxyx()
-#
-#    # calculate the center of the screen
-#    center_y = int(height / 2)
-#    text = ["Enter your input: "]
-#    # calculate the starting position for the input
-#    start_y = center_y + 10
-#    # start_x = center_x - 10
-#    start_x = 0
-#
-#    # display a prompt for the user to enter input
-#    screen.addstr(start_y, start_x, text[0])
-#
-#    # get the input from the user
-#    user_input = screen.getstr(start_y, start_x + 17)
-#
-#    # return the input
-#    return user_input
-#
-#
-def clear_screen(screen):
-    screen.erase()
-    screen.refresh()
+def display_text(stdscr, text):
+    if stdscr:
+        # stdscr.clear()
+        curses.clear()
+        # height, width = stdscr.getmaxyx()
+        height, width = curses.getmaxyx(stdscr)
+        center_y = int(height / 3)
+        start_y = center_y - int(len(text) / 2)
+        start_x = 0
+        for i, line in enumerate(text):
+            try:
+                # stdscr.addstr(start_y + i, start_x, line)
+                curses.mvaddstr(start_y + i, start_x, line)
+            except Exception as e:
+                close_screen(stdscr)
+                print(e)
+                sys.exit()
+        # stdscr.refresh()
+        curses.refresh()
+    else:
+        tuple(map(print, text))
+
+
+def help_screen(stdscr):
+    clear_screen(stdscr)
+    display_text(stdscr, help_text)
+    # stdscr.getch()
+    curses.getch()
+
+
+def clear_screen(stdscr):
+    # stdscr.erase()
+    # stdscr.refresh()
+    curses.erase()
+    curses.refresh()
